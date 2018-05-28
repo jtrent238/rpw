@@ -10,14 +10,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import net.mightypork.rpw.App;
+import net.mightypork.rpw.Config;
 import net.mightypork.rpw.Const;
 import net.mightypork.rpw.Paths;
 import net.mightypork.rpw.gui.windows.messages.Alerts;
 import net.mightypork.rpw.library.MagicSources;
 import net.mightypork.rpw.library.Source;
 import net.mightypork.rpw.library.Sources;
+import net.mightypork.rpw.struct.LangEntry;
 import net.mightypork.rpw.struct.LangEntryMap;
 import net.mightypork.rpw.struct.SoundEntryMap;
+import net.mightypork.rpw.tasks.sequences.SequenceExportProject;
 import net.mightypork.rpw.tree.assets.AssetEntry;
 import net.mightypork.rpw.utils.Fixins;
 import net.mightypork.rpw.utils.files.DirectoryTreeDifferenceFinder;
@@ -42,7 +45,6 @@ public class Project extends Source implements NodeSourceProvider
 	private File extrasBase;
 	private File customSoundsBase;
 	private File customLangsBase;
-
 	private File fileSourcesFiles;
 	private File fileSourcesGroups;
 	private File fileSounds;
@@ -51,13 +53,19 @@ public class Project extends Source implements NodeSourceProvider
 
 	private final String projectName;
 	private String projectTitle;
+	private String projectDescription;
 
 	private Integer lastRpwVersion;
 
+	private int exportPackVersion;
+	private boolean unZip;
+	private String currentMcVersion;
 
 	public Project(String identifier) {
 		projectName = identifier;
 		projectTitle = identifier; // by default
+		projectDescription = " ";
+		currentMcVersion = " ";
 
 		backupBase = Paths.getProjectBackupFolder(identifier);
 		projectBase = Paths.getProjectFolder(identifier);
@@ -82,7 +90,7 @@ public class Project extends Source implements NodeSourceProvider
 	 */
 	public void reload()
 	{
-		Log.f2(getLogPrefix() + " Loading from workdir");
+		Log.f2(getLogPrefix() + "Loading from workdir");
 
 		fileConfig = new File(projectBase, Paths.FILENAME_PROJECT_CONFIG);
 
@@ -148,6 +156,8 @@ public class Project extends Source implements NodeSourceProvider
 		props.cfgSeparateSections(false);
 
 		props.putString("title", projectTitle);
+		props.putString("description", projectDescription);
+        props.putString("currentMcVersion", currentMcVersion);
 		props.putInteger("version", Const.VERSION_SERIAL);
 
 		props.renameKey("name", "title"); // change 3.8.3 -> 3.8.4
@@ -155,6 +165,8 @@ public class Project extends Source implements NodeSourceProvider
 		props.apply();
 
 		projectTitle = props.getString("title");
+		projectDescription = props.getString("description");
+		currentMcVersion = props.getString("currentMcVersion");
 		lastRpwVersion = props.getInteger("version");
 	}
 
@@ -219,7 +231,7 @@ public class Project extends Source implements NodeSourceProvider
 
 	/**
 	 * Flush project metadata to workdir
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public void saveConfigFiles() throws IOException
@@ -228,7 +240,7 @@ public class Project extends Source implements NodeSourceProvider
 			SimpleConfig.mapToFile(fileSourcesFiles, files, false);
 			SimpleConfig.mapToFile(fileSourcesGroups, groups, false);
 			FileUtils.stringToFile(fileSounds, sounds.toJson()); // NPE here. Why, how??? #45
-			FileUtils.stringToFile(fileLangs, langs.toJson());
+            FileUtils.stringToFile(fileLangs, langs.toJson());
 		} catch (NullPointerException e) {
 			Log.e("NPE from issue #45 happened again", e);
 		}
@@ -237,6 +249,9 @@ public class Project extends Source implements NodeSourceProvider
 		props.cfgForceSave(true);
 		props.setValue("version", Const.VERSION_SERIAL);
 		props.setValue("title", projectTitle);
+		props.setValue("description", projectDescription);
+        props.setValue("currentMcVersion", currentMcVersion);
+
 		props.apply();
 	}
 
@@ -244,7 +259,7 @@ public class Project extends Source implements NodeSourceProvider
 	/**
 	 * Check if there's a difference between the working directory and the
 	 * backup folder.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isWorkdirDirty()
@@ -354,6 +369,44 @@ public class Project extends Source implements NodeSourceProvider
 		return projectTitle;
 	}
 
+	public void setDescription(String description){
+		projectDescription = description;
+		Projects.markChange();
+	}
+
+	public String getDescription(){
+		return projectDescription;
+	}
+
+	public void setExportPackVersion(int packVersion){
+		exportPackVersion = packVersion;
+	}
+
+	public int getExportPackVersion(){
+		return exportPackVersion;
+	}
+
+	public void setUnZip(boolean unzip){
+	    unZip = unzip;
+	}
+
+	public boolean getUnzip(){return unZip;}
+
+	public String getCurrentMcVersion(){
+	    return currentMcVersion;
+	}
+
+	public void setCurrentMcVersion(String currentMcVersion){this.currentMcVersion = currentMcVersion;}
+
+	public LangEntryMap getCustomLanguages() { return langs; }
+
+    public void addToCustomLanguages(LangEntry language) {
+	    if(langs == null){
+	        langs = new LangEntryMap();
+        }
+
+	    langs.put(language.name, language);
+    }
 
 	public void installDefaultIcon(boolean force)
 	{
@@ -448,7 +501,7 @@ public class Project extends Source implements NodeSourceProvider
 
 	/**
 	 * Project main directory
-	 * 
+	 *
 	 * @return workdir
 	 */
 	public File getProjectDirectory()
@@ -503,3 +556,4 @@ public class Project extends Source implements NodeSourceProvider
 	}
 
 }
+

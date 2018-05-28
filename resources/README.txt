@@ -14,13 +14,13 @@
 
 ---------------------------------------------------------------------------- 
 
-    Java 7 is recommended, Java 6 minimal.
+    Java 8 or later required.
 
 ----------------------------------------------------------------------------
 
-      Official website:   rpw.ondrovo.com
+      Official website:   https://mcrpw.github.io/
       
-      GitHub repo:        github.com/MightyPork/rpw
+      GitHub repo:        github.com/mcRPW/rpw
 
       RPW news:           @RPWapp (twitter)
 

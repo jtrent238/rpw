@@ -45,6 +45,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
 
         </plugins>
     </build>
@@ -91,7 +99,7 @@
     </organization>
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/MightyPork/rpw/issues</url>
+        <url>https://github.com/mcRPW/rpw/issues</url>
     </issueManagement>
-    <url>https://github.com/MightyPork/rpw</url>
+    <url>https://github.com/mcRPW/rpw</url>
 </project>

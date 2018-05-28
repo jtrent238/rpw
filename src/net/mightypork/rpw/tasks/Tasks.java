@@ -16,20 +16,7 @@ import net.mightypork.rpw.gui.Gui;
 import net.mightypork.rpw.gui.windows.WindowSplash;
 import net.mightypork.rpw.gui.windows.RpwDialog;
 import net.mightypork.rpw.gui.windows.WindowMain;
-import net.mightypork.rpw.gui.windows.dialogs.DialogAbout;
-import net.mightypork.rpw.gui.windows.dialogs.DialogConfigureEditors;
-import net.mightypork.rpw.gui.windows.dialogs.DialogEditText;
-import net.mightypork.rpw.gui.windows.dialogs.DialogExportToMc;
-import net.mightypork.rpw.gui.windows.dialogs.DialogHelp;
-import net.mightypork.rpw.gui.windows.dialogs.DialogImportPack;
-import net.mightypork.rpw.gui.windows.dialogs.DialogManageLibrary;
-import net.mightypork.rpw.gui.windows.dialogs.DialogManageMcPacks;
-import net.mightypork.rpw.gui.windows.dialogs.DialogNewProject;
-import net.mightypork.rpw.gui.windows.dialogs.DialogManageProjects;
-import net.mightypork.rpw.gui.windows.dialogs.DialogProjectProperties;
-import net.mightypork.rpw.gui.windows.dialogs.DialogProjectSummary;
-import net.mightypork.rpw.gui.windows.dialogs.DialogSaveAs;
-import net.mightypork.rpw.gui.windows.dialogs.DialogSoundWizard;
+import net.mightypork.rpw.gui.windows.dialogs.*;
 import net.mightypork.rpw.gui.windows.messages.Alerts;
 import net.mightypork.rpw.gui.windows.messages.DialogChangelog;
 import net.mightypork.rpw.gui.windows.messages.DialogRuntimeLog;
@@ -59,979 +46,898 @@ import net.mightypork.rpw.utils.logging.Log;
  *
  * @author Ondřej Hruška (MightyPork)
  */
-public class Tasks
-{
+public class Tasks {
 
-	private static int LAST_TASK = 0;
-	private static HashMap<Integer, Boolean> TASKS_RUNNING = new HashMap<Integer, Boolean>();
+    private static int LAST_TASK = 0;
+    private static HashMap<Integer, Boolean> TASKS_RUNNING = new HashMap<Integer, Boolean>();
 
 
-	private static int startTask()
-	{
-		final int task = LAST_TASK++;
-		TASKS_RUNNING.put(task, true);
+    private static int startTask() {
+        final int task = LAST_TASK++;
+        TASKS_RUNNING.put(task, true);
 
-		return task;
-	}
+        return task;
+    }
 
 
-	private static int stopTask(int task)
-	{
-		TASKS_RUNNING.put(task, false);
-		return task;
-	}
+    private static int stopTask(int task) {
+        TASKS_RUNNING.put(task, false);
+        return task;
+    }
 
 
-	/**
-	 * Is task still running?
-	 *
-	 * @param task task ID
-	 * @return is running
-	 */
-	public static boolean isRunning(int task)
-	{
-		if (task == -1) return false;
+    /**
+     * Is task still running?
+     *
+     * @param task task ID
+     * @return is running
+     */
+    public static boolean isRunning(int task) {
+        if (task == -1) return false;
 
-		final Boolean state = TASKS_RUNNING.get(task);
-		if (state == null || state == false) return false;
+        final Boolean state = TASKS_RUNNING.get(task);
+        if (state == null || state == false) return false;
 
-		return true;
-	}
+        return true;
+    }
 
 
-	public static int taskBuildMainWindow()
-	{
-		final int task = Tasks.startTask();
+    public static int taskBuildMainWindow() {
+        final int task = Tasks.startTask();
 
-		new Thread(new Runnable()
-		{
+        new Thread(new Runnable() {
 
-			@Override
-			public void run()
-			{
-				try {
-					EventQueue.invokeLater(new Runnable()
-					{
+            @Override
+            public void run() {
+                try {
+                    EventQueue.invokeLater(new Runnable() {
 
-						@Override
-						public void run()
-						{
-							// -- task begin --
+                        @Override
+                        public void run() {
+                            // -- task begin --
 
-							App.inst.window = new WindowMain();
+                            App.inst.window = new WindowMain();
 
-							Flags.PROJECT_CHANGED = !Config.CLOSED_WITH_PROJECT_OPEN;
-							Tasks.taskOnProjectChanged();
+                            Flags.PROJECT_CHANGED = !Config.CLOSED_WITH_PROJECT_OPEN;
+                            Tasks.taskOnProjectChanged();
 
-							App.inst.splashWindow.hide();
+                            App.inst.splashWindow.hide();
 
-							Tasks.stopTask(task);
+                            Tasks.stopTask(task);
 
-							// -- task end --
-						}
-					});
-				} catch (final Exception e) {
-					Log.e(e);
-				}
-			}
-		}).start();
+                            // -- task end --
+                        }
+                    });
+                } catch (final Exception e) {
+                    Log.e(e);
+                }
+            }
+        }).start();
 
-		return task;
-	}
+        return task;
+    }
 
 
-	public static int taskBuildPlaceholderMainWindow()
-	{
-		final int task = Tasks.startTask();
+    public static int taskBuildPlaceholderMainWindow() {
+        final int task = Tasks.startTask();
 
-		new Thread(new Runnable()
-		{
+        new Thread(new Runnable() {
 
-			@Override
-			public void run()
-			{
-				try {
-					EventQueue.invokeLater(new Runnable()
-					{
+            @Override
+            public void run() {
+                try {
+                    EventQueue.invokeLater(new Runnable() {
 
-						@Override
-						public void run()
-						{
-							// -- task begin --
+                        @Override
+                        public void run() {
+                            // -- task begin --
 
-							App.inst.splashWindow = new WindowSplash();
+                            App.inst.splashWindow = new WindowSplash();
 
-							Tasks.stopTask(task);
+                            Tasks.stopTask(task);
 
-							// -- task end --
-						}
-					});
-				} catch (final Exception e) {
-					Log.e(e);
-				}
-			}
-		}).start();
+                            // -- task end --
+                        }
+                    });
+                } catch (final Exception e) {
+                    Log.e(e);
+                }
+            }
+        }).start();
 
-		return task;
-	}
+        return task;
+    }
 
 
-	public static int taskReloadSources(final Runnable after)
-	{
-		final int task = Tasks.startTask();
+    public static int taskReloadSources(final Runnable after) {
+        final int task = Tasks.startTask();
 
-		new Thread(new Runnable()
-		{
+        new Thread(new Runnable() {
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+            @Override
+            public void run() {
+                // -- task begin --
 
-				Tasks.taskStoreProjectChanges();
-				Sources.initLibrary();
-				Tasks.taskTreeRedraw();
+                Tasks.taskStoreProjectChanges();
+                Sources.initLibrary();
+                Tasks.taskTreeRedraw();
 
-				if (after != null) after.run();
+                if (after != null) after.run();
 
-				Tasks.stopTask(task);
+                Tasks.stopTask(task);
 
-				// -- task end --
-			}
-		}).start();
+                // -- task end --
+            }
+        }).start();
 
-		return task;
-	}
+        return task;
+    }
 
 
-	public static void taskTreeCollapse()
-	{
-		App.getTreeDisplay().treeTable.collapseAll();
-	}
+    public static void taskTreeCollapse() {
+        App.getTreeDisplay().treeTable.collapseAll();
+    }
 
 
-	public static void taskTreeExpand()
-	{
-		App.getTreeDisplay().treeTable.expandAll();
-	}
+    public static void taskTreeExpand() {
+        App.getTreeDisplay().treeTable.expandAll();
+    }
 
 
-	public static void taskDialogAbout()
-	{
-		Gui.open(new DialogAbout());
-	}
+    public static void taskDialogAbout() {
+        Gui.open(new DialogAbout());
+    }
 
 
-	public static void taskDialogExportToMc()
-	{
-		Gui.open(new DialogExportToMc());
-	}
+    public static void taskDialogExport() {
+        Gui.open(new DialogExport());
+    }
 
 
-	public static void taskDialogHelp()
-	{
-		Alerts.loading(true);
-		final JDialog dialog = new DialogHelp();
-		Alerts.loading(false);
-		dialog.setVisible(true);
-	}
+    public static void taskDialogHelp() {
+        Alerts.loading(true);
+        final JDialog dialog = new DialogHelp();
+        Alerts.loading(false);
+        dialog.setVisible(true);
+    }
 
 
-	public static void taskDialogLog()
-	{
-		Gui.open(new DialogRuntimeLog());
-	}
+    public static void taskDialogLog() {
+        Gui.open(new DialogRuntimeLog());
+    }
 
 
-	public static void taskDialogImportPack()
-	{
-		Gui.open(new DialogImportPack());
-	}
+    public static void taskDialogImportPack() {
+        Gui.open(new DialogImportPack());
+    }
 
 
-	public static void taskTreeSourceRename(String oldSource, String newSource)
-	{
-		final AssetTreeNode root = App.getTreeDisplay().treeModel.getRoot();
-		final AssetTreeProcessor processor = new RenameSourceProcessor(oldSource, newSource);
-		root.processThisAndChildren(processor);
+    public static void taskTreeSourceRename(String oldSource, String newSource) {
+        final AssetTreeNode root = App.getTreeDisplay().treeModel.getRoot();
+        final AssetTreeProcessor processor = new RenameSourceProcessor(oldSource, newSource);
+        root.processThisAndChildren(processor);
 
-		taskStoreProjectChanges();
-		taskTreeRedraw();
-		Projects.markChange();
-	}
+        taskStoreProjectChanges();
+        taskTreeRedraw();
+        Projects.markChange();
+    }
 
 
-	public static void taskTreeRedraw()
-	{
-		final AssetTreeNode root = App.getTreeDisplay().treeModel.getRoot();
-		App.getTreeDisplay().treeModel.notifyNodeChanged(root);
-	}
+    public static void taskTreeRedraw() {
+        final AssetTreeNode root = App.getTreeDisplay().treeModel.getRoot();
+        App.getTreeDisplay().treeModel.notifyNodeChanged(root);
+    }
 
 
-	public static void taskStoreProjectChanges()
-	{
-		taskStoreProjectChanges(Projects.getActive());
-	}
+    public static void taskStoreProjectChanges() {
+        taskStoreProjectChanges(Projects.getActive());
+    }
 
 
-	public static void taskStoreProjectChanges(Project proj)
-	{
-		if (proj == null) return;
+    public static void taskStoreProjectChanges(Project proj) {
+        if (proj == null) return;
 
-		final AssetTreeProcessor proc = new SaveToProjectNodeProcessor(proj);
-		final AssetTreeNode root = App.getTreeDisplay().treeModel.getRoot();
+        final AssetTreeProcessor proc = new SaveToProjectNodeProcessor(proj);
+        final AssetTreeNode root = App.getTreeDisplay().treeModel.getRoot();
 
-		if (root != null) {
-			root.processThisAndChildren(proc);
-		}
+        if (root != null) {
+            root.processThisAndChildren(proc);
+        }
 
-		try {
-			proj.saveConfigFiles();
-		} catch (final IOException e) {
-			Log.e(e);
-		}
+        try {
+            proj.saveConfigFiles();
+        } catch (final IOException e) {
+            Log.e(e);
+        }
 
-		Projects.clearChangeFlag();
-	}
+        Projects.clearChangeFlag();
+    }
 
 
-	public static void taskDialogExportProject()
-	{
-		if (!Projects.isOpen()) return;
+    public static void taskAskRevertProject() {
+        if (Alerts.askYesNo(App.getFrame(), "Confirm Revert", "This will undo ALL changes in the project since\n" + "the last save, even done by external programs.\n\n"
+                + "Are you sure you want to do this?")) {
 
-		TaskExportProject.showDialog();
-	}
+            Tasks.taskRevertProject();
+        }
+    }
 
 
-	public static void taskAskRevertProject()
-	{
-		if (Alerts.askYesNo(App.getFrame(), "Confirm Revert", "This will undo ALL changes in the project since\n" + "the last save, even done by external programs.\n\n"
-				+ "Are you sure you want to do this?")) {
+    public static int taskRevertProject() {
+        final int task = Tasks.startTask();
 
-			Tasks.taskRevertProject();
-		}
-	}
+        new Thread(new Runnable() {
 
+            @Override
+            public void run() {
+                // -- task begin --
 
-	public static int taskRevertProject()
-	{
-		final int task = Tasks.startTask();
+                Alerts.loading(true);
+                Projects.revertProject();
+                Alerts.loading(false);
 
-		new Thread(new Runnable()
-		{
+                Tasks.stopTask(task);
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+                Tasks.taskOnProjectPropertiesChanged();
+                Tasks.taskTreeRebuild();
 
-				Alerts.loading(true);
-				Projects.revertProject();
-				Alerts.loading(false);
+                // -- task end --
+            }
+        }).start();
 
-				Tasks.stopTask(task);
+        return task;
+    }
 
-				Tasks.taskOnProjectPropertiesChanged();
-				Tasks.taskTreeRebuild();
 
-				// -- task end --
-			}
-		}).start();
+    public static int taskDeleteIdenticalToVanilla() {
+        final int task = Tasks.startTask();
 
-		return task;
-	}
+        new Thread(new Runnable() {
 
+            @Override
+            public void run() {
+                // -- task begin --
 
-	public static int taskDeleteIdenticalToVanilla()
-	{
-		final int task = Tasks.startTask();
+                Alerts.loading(true);
+                Tasks.taskStoreProjectChanges();
 
-		new Thread(new Runnable()
-		{
+                (new SequenceDeleteIdenticalToVanilla()).run();
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+                Tasks.stopTask(task);
 
-				Alerts.loading(true);
-				Tasks.taskStoreProjectChanges();
+                // -- task end --
+            }
+        }).start();
 
-				(new SequenceDeleteIdenticalToVanilla()).run();
+        return task;
+    }
 
-				Tasks.stopTask(task);
 
-				// -- task end --
-			}
-		}).start();
+    public static int taskExportProject(final File target, final Runnable afterExport) {
+        final int task = Tasks.startTask();
 
-		return task;
-	}
+        new Thread(new Runnable() {
 
+            @Override
+            public void run() {
+                // -- task begin --
 
-	public static int taskExportProject(final File target, final Runnable afterExport)
-	{
-		final int task = Tasks.startTask();
+                Tasks.taskStoreProjectChanges();
 
-		new Thread(new Runnable()
-		{
+                (new SequenceExportProject(target, afterExport)).run();
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+                Tasks.stopTask(task);
 
-				Tasks.taskStoreProjectChanges();
+                // -- task end --
+            }
+        }).start();
 
-				(new SequenceExportProject(target, afterExport)).run();
+        return task;
+    }
 
-				Tasks.stopTask(task);
 
-				// -- task end --
-			}
-		}).start();
+    public static void taskAskToSaveIfChanged(Runnable afterSave) {
+        if (Flags.GOING_FOR_HALT || !Projects.isOpen()) {
+            if (afterSave != null) afterSave.run();
+            return;
+        }
 
-		return task;
-	}
+        // Save temporary changes, to enable difference finding
+        taskStoreProjectChanges();
 
+        boolean anyChanges = false;
 
-	public static void taskAskToSaveIfChanged(Runnable afterSave)
-	{
-		if (Flags.GOING_FOR_HALT || !Projects.isOpen()) {
-			if (afterSave != null) afterSave.run();
-			return;
-		}
+        // Compare with backup
+        Log.f2("Checking project for unsaved changes.");
 
-		// Save temporary changes, to enable difference finding
-		taskStoreProjectChanges();
+        Alerts.loading(true);
+        anyChanges = Projects.getActive().isWorkdirDirty();
+        Alerts.loading(false);
 
-		boolean anyChanges = false;
+        if (anyChanges) {
+            Log.f3("Asking to save.");
 
-		// Compare with backup
-		Log.f2("Checking project for unsaved changes.");
+            if (Config.AUTO_SAVE) {
 
-		Alerts.loading(true);
-		anyChanges = Projects.getActive().isWorkdirDirty();
-		Alerts.loading(false);
+                Log.f3("- Config option AUTO_SAVE enabled, saving.");
+                taskSaveProject();
+            } else {
 
-		if (anyChanges) {
-			Log.f3("Asking to save.");
+                //@formatter:off
+                final int choice = Alerts.askYesNoCancel(
+                        App.getFrame(),
+                        "Save changes",
+                        "There are some changes in the project. Save?\n\n"
+                                + "(Hate this? Enable auto-save in Options.)\n"
+                );
+                //@formatter:on
 
-			if (Config.AUTO_SAVE) {
+                if (choice == JOptionPane.CANCEL_OPTION) {
+                    Log.f3("- User choice CANCEL");
+                    return; // cancelled
+                } else if (choice == JOptionPane.OK_OPTION) {
+                    Log.f3("- User choice SAVE");
+                    taskSaveProject();
+                } else {
+                    Log.f3("- User choice DISCARD");
 
-				Log.f3("- Config option AUTO_SAVE enabled, saving.");
-				taskSaveProject();
-			} else {
+                    //@formatter:off
+                    if (Alerts.askOkCancel(
+                            App.getFrame(),
+                            "Confirm Revert",
+                            "You selected to discard changes.\n"
+                                    + "This will undo ALL changes in the project since\n"
+                                    + "the last save, even done by external programs.\n\n"
+                                    + "Are you sure you want to do this?")) {
 
-				//@formatter:off
-				final int choice = Alerts.askYesNoCancel(
-						App.getFrame(),
-						"Save changes",
-						"There are some changes in the project. Save?\n\n"
-						+ "(Hate this? Enable auto-save in Options.)\n"
-				);
-				//@formatter:on
+                        Tasks.taskRevertProject();
 
-				if (choice == JOptionPane.CANCEL_OPTION) {
-					Log.f3("- User choice CANCEL");
-					return; // cancelled
-				} else if (choice == JOptionPane.OK_OPTION) {
-					Log.f3("- User choice SAVE");
-					taskSaveProject();
-				} else {
-					Log.f3("- User choice DISCARD");
+                    } else {
+                        return; // do not call handler
+                    }
+                    //@formatter:on
+                }
+            }
+        }
 
-					//@formatter:off
-					if (Alerts.askOkCancel(
-							App.getFrame(),
-							"Confirm Revert",
-							"You selected to discard changes.\n"
-							+ "This will undo ALL changes in the project since\n"
-							+ "the last save, even done by external programs.\n\n"
-							+ "Are you sure you want to do this?")) {
-						
-						Tasks.taskRevertProject();
-						
-					} else {
-						return; // do not call handler
-					}
-					//@formatter:on
-				}
-			}
-		}
+        if (afterSave != null) afterSave.run();
+    }
 
-		if (afterSave != null) afterSave.run();
-	}
 
+    public static int taskImportReplacement(final AssetTreeLeaf node) {
+        final int task = Tasks.startTask();
 
-	public static int taskImportReplacement(final AssetTreeLeaf node)
-	{
-		final int task = Tasks.startTask();
+        new Thread(new Runnable() {
 
-		new Thread(new Runnable()
-		{
+            @Override
+            public void run() {
+                // -- task begin --
+                TaskImportReplacement.run(node.getAssetEntry(), new Runnable() {
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
-				TaskImportReplacement.run(node.getAssetEntry(), new Runnable()
-				{
+                    @Override
+                    public void run() {
+                        node.setLibrarySourceIfNeeded(MagicSources.PROJECT);
+                        App.getSidePanel().redrawPreview();
+                        Tasks.taskTreeRedraw();
+                        Projects.markChange();
+                    }
+                });
 
-					@Override
-					public void run()
-					{
-						node.setLibrarySourceIfNeeded(MagicSources.PROJECT);
-						App.getSidePanel().redrawPreview();
-						Tasks.taskTreeRedraw();
-						Projects.markChange();
-					}
-				});
+                Tasks.stopTask(task);
 
-				Tasks.stopTask(task);
+                // -- task end --
+            }
+        }).start();
 
-				// -- task end --
-			}
-		}).start();
+        return task;
+    }
 
-		return task;
-	}
 
+    public static void taskCloseProject() {
+        taskAskToSaveIfChanged(new Runnable() {
 
-	public static void taskCloseProject()
-	{
-		taskAskToSaveIfChanged(new Runnable()
-		{
+            @Override
+            public void run() {
+                Projects.closeProject();
+                taskOnProjectChanged();
+            }
+        });
+    }
 
-			@Override
-			public void run()
-			{
-				Projects.closeProject();
-				taskOnProjectChanged();
-			}
-		});
-	}
 
+    public static void taskCloseProjectNoRebuild() {
+        taskAskToSaveIfChanged(new Runnable() {
 
-	public static void taskCloseProjectNoRebuild()
-	{
-		taskAskToSaveIfChanged(new Runnable()
-		{
+            @Override
+            public void run() {
+                Projects.closeProject();
+            }
+        });
+    }
 
-			@Override
-			public void run()
-			{
-				Projects.closeProject();
-			}
-		});
-	}
 
+    public static void taskOnProjectChanged() {
+        if (!Flags.PROJECT_CHANGED) {
+            return;
+        }
+        Flags.PROJECT_CHANGED = false;
 
-	public static void taskOnProjectChanged()
-	{
-		if (!Flags.PROJECT_CHANGED) {
-			return;
-		}
-		Flags.PROJECT_CHANGED = false;
+        taskTreeRebuild();
 
-		taskTreeRebuild();
+        taskOnProjectPropertiesChanged();
+        App.getMenu().updateEnabledItems();
+        taskRedrawRecentProjectsMenu();
+    }
 
-		taskOnProjectPropertiesChanged();
-		App.getMenu().updateEnabledItems();
-		taskRedrawRecentProjectsMenu();
-	}
 
+    public static void taskEditModFilters() {
+        final File f = OsUtils.getAppDir(Paths.FILE_CFG_MODFILTERS);
 
-	public static void taskEditModFilters()
-	{
-		final File f = OsUtils.getAppDir(Paths.FILE_CFG_MODFILTERS);
+        editTextFile(f);
+    }
 
-		editTextFile(f);
-	}
 
+    public static void taskEditModGroups() {
+        final File f = OsUtils.getAppDir(Paths.FILE_CFG_MODGROUPS);
 
-	public static void taskEditModGroups()
-	{
-		final File f = OsUtils.getAppDir(Paths.FILE_CFG_MODGROUPS);
+        editTextFile(f);
+    }
 
-		editTextFile(f);
-	}
 
+    private static void editTextFile(File f) {
+        if (Config.USE_INTERNAL_META_EDITOR) {
+            RpwDialog dlg;
+            try {
+                Alerts.loading(true);
+                dlg = new DialogEditText(f);
+                Alerts.loading(false);
+                dlg.setVisible(true);
+            } catch (final IOException e) {
+                Log.e(e);
+            }
+        } else {
+            DesktopApi.editText(f);
+        }
+    }
 
-	private static void editTextFile(File f)
-	{
-		if (Config.USE_INTERNAL_META_EDITOR) {
-			RpwDialog dlg;
-			try {
-				Alerts.loading(true);
-				dlg = new DialogEditText(f);
-				Alerts.loading(false);
-				dlg.setVisible(true);
-			} catch (final IOException e) {
-				Log.e(e);
-			}
-		} else {
-			DesktopApi.editText(f);
-		}
-	}
 
+    public static void taskTreeSaveAndRebuild() {
+        Tasks.taskStoreProjectChanges();
+        Tasks.taskTreeRebuild();
+    }
 
-	public static void taskTreeSaveAndRebuild()
-	{
-		Tasks.taskStoreProjectChanges();
-		Tasks.taskTreeRebuild();
-	}
 
+    public static void taskSaveProject() {
+        Tasks.taskStoreProjectChanges();
+        // Saved -> overwrite the backup.
+        Projects.getActive().createBackup();
+    }
 
-	public static void taskSaveProject()
-	{
-		Tasks.taskStoreProjectChanges();
-		// Saved -> overwrite the backup.
-		Projects.getActive().createBackup();
-	}
 
+    public static void taskTreeRebuild() {
+        if (App.getTreeDisplay() != null) App.getTreeDisplay().updateRoot();
+        if (App.getSidePanel() != null) App.getSidePanel().updatePreview(null);
+    }
 
-	public static void taskTreeRebuild()
-	{
-		if (App.getTreeDisplay() != null) App.getTreeDisplay().updateRoot();
-		if (App.getSidePanel() != null) App.getSidePanel().updatePreview(null);
-	}
 
+    public static void taskDeleteEmptyDirsFromProject() {
+        FileUtils.deleteEmptyDirs(Projects.getActive().getAssetsDirectory());
+    }
 
-	public static void taskDeleteEmptyDirsFromProject()
-	{
-		FileUtils.deleteEmptyDirs(Projects.getActive().getAssetsDirectory());
-	}
 
+    public static int taskDeleteProject(final String identifier) {
+        final int task = Tasks.startTask();
 
-	public static int taskDeleteProject(final String identifier)
-	{
-		final int task = Tasks.startTask();
+        new Thread(new Runnable() {
 
-		new Thread(new Runnable()
-		{
+            @Override
+            public void run() {
+                // -- task begin --
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+                final File dir = new File(OsUtils.getAppDir(Paths.DIR_PROJECTS), identifier);
+                FileUtils.delete(dir, true);
 
-				final File dir = new File(OsUtils.getAppDir(Paths.DIR_PROJECTS), identifier);
-				FileUtils.delete(dir, true);
+                Tasks.stopTask(task);
+                // -- task end --
+            }
+        }).start();
 
-				Tasks.stopTask(task);
-				// -- task end --
-			}
-		}).start();
+        return task;
+    }
 
-		return task;
-	}
 
+    public static int taskCreateModConfigFiles() {
+        final int task = Tasks.startTask();
 
-	public static int taskCreateModConfigFiles()
-	{
-		final int task = Tasks.startTask();
+        new Thread(new Runnable() {
 
-		new Thread(new Runnable()
-		{
+            @Override
+            public void run() {
+                // -- task begin --
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+                TaskCreateModConfigFiles.run();
+                Tasks.stopTask(task);
 
-				TaskCreateModConfigFiles.run();
-				Tasks.stopTask(task);
+                // -- task end --
+            }
+        }).start();
 
-				// -- task end --
-			}
-		}).start();
+        return task;
+    }
 
-		return task;
-	}
 
+    public static int taskLoadVanillaStructure() {
+        final int task = Tasks.startTask();
 
-	public static int taskLoadVanillaStructure()
-	{
-		final int task = Tasks.startTask();
+        new Thread(new Runnable() {
 
-		new Thread(new Runnable()
-		{
+            @Override
+            public void run() {
+                // -- task begin --
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+                TaskLoadVanillaStructure.run();
+                Tasks.stopTask(task);
 
-				TaskLoadVanillaStructure.run();
-				Tasks.stopTask(task);
+                // -- task end --
+            }
+        }).start();
 
-				// -- task end --
-			}
-		}).start();
+        return task;
+    }
 
-		return task;
-	}
 
+    public static void taskConfigureMinecraftAssets() {
+        if (!Projects.isOpen()) return;
 
-	public static int taskExtractAssets()
-	{
-		final String version = TaskExtractAssets.getUserChoice(false);
+        Gui.open(new DialogConfigureMinecraftAssets());
+    }
 
-		if (version == null) return -1;
 
-		final int task = Tasks.startTask();
+    public static int taskExtractAssets() {
+        final String version = TaskExtractAssets.getUserChoice(false);
 
-		new Thread(new Runnable()
-		{
+        if (version == null) return -1;
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+        Projects.getActive().setCurrentMcVersion(version);
+        Config.LIBRARY_VERSION = version;
+        App.getSidePanel().setMcVersion();
 
-				TaskExtractAssets.run(version);
-				Tasks.taskTreeSaveAndRebuild();
+        final int task = Tasks.startTask();
 
-				Tasks.stopTask(task);
+        new Thread(new Runnable() {
 
-				// -- task end --
-			}
-		}).start();
+            @Override
+            public void run() {
+                // -- task begin --
 
-		return task;
-	}
+                TaskExtractAssets.run(version);
+                Tasks.taskTreeSaveAndRebuild();
 
+                Tasks.stopTask(task);
+                Sources.initVanilla();
+                Tasks.taskLoadVanillaStructure();
+                Tasks.taskUpdateTitlebar();
 
-	public static int taskExtractAssetsOrDie()
-	{
-		final String version = TaskExtractAssets.getUserChoice(true);
+                // -- task end --
+            }
+        }).start();
 
-		if (version == null || version.length() == 0) {
-			//@formatter:off
-			App.die(
-				"RPW cannot run without Minecraft assets.\n" +
-				"Aborting."
-			);
-			//@formatter:on
+        return task;
+    }
 
-			return -1;
-		}
 
-		final int task = Tasks.startTask();
+    public static int taskExtractAssetsOrDie() {
+        final String version = TaskExtractAssets.getUserChoice(true);
 
-		new Thread(new Runnable()
-		{
+        if (version == null || version.length() == 0) {
+            //@formatter:off
+            App.die(
+                    "RPW cannot run without Minecraft assets.\n" +
+                            "Aborting."
+            );
+            //@formatter:on
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
+            return -1;
+        }
 
-				TaskExtractAssets.run(version);
+        final int task = Tasks.startTask();
 
-				Tasks.stopTask(task);
+        new Thread(new Runnable() {
 
-				// -- task end --
-			}
-		}).start();
+            @Override
+            public void run() {
+                // -- task begin --
 
-		return task;
-	}
+                TaskExtractAssets.run(version);
 
+                Tasks.stopTask(task);
 
-	public static void taskExit()
-	{
-		taskAskToSaveIfChanged(new Runnable()
-		{
+                // -- task end --
+            }
+        }).start();
 
-			@Override
-			public void run()
-			{
-				Config.CLOSED_WITH_PROJECT_OPEN = Projects.isOpen();
-				Flags.GOING_FOR_HALT = true;
-				Config.save();
-				App.inst.deinit();
-				System.exit(0);
-			}
-		});
-	}
+        return task;
+    }
 
 
-	public static void taskNewProject()
-	{
-		taskDialogNewProject();
-	}
+    public static void taskExit() {
+        taskAskToSaveIfChanged(new Runnable() {
 
+            @Override
+            public void run() {
+                Config.CLOSED_WITH_PROJECT_OPEN = Projects.isOpen();
+                Flags.GOING_FOR_HALT = true;
+                Config.save();
+                App.inst.deinit();
+                System.exit(0);
+            }
+        });
+    }
 
-	public static void taskOpenProject()
-	{
-		taskDialogManageProjects();
-	}
 
+    public static void taskNewProject() {
+        taskDialogNewProject();
+    }
 
-	public static void taskOpenProject(final String name)
-	{
-		taskAskToSaveIfChanged(new Runnable()
-		{
 
-			@Override
-			public void run()
-			{
-				new Thread(new Runnable()
-				{
+    public static void taskOpenProject() {
+        taskDialogManageProjects();
+    }
 
-					@Override
-					public void run()
-					{
-						// -- task begin --
 
-						Log.f1("Loading project " + name);
-						Alerts.loading(true);
-						Projects.closeProject();
-						Projects.openProject(name);
-						Flags.PROJECT_CHANGED = true;
-						Tasks.taskOnProjectChanged();
-						Alerts.loading(false);
+    public static void taskOpenProject(final String name) {
+        taskAskToSaveIfChanged(new Runnable() {
 
-						// -- task end --
-					}
-				}).start();
-			}
-		});
-	}
+            @Override
+            public void run() {
+                new Thread(new Runnable() {
 
+                    @Override
+                    public void run() {
+                        // -- task begin --
 
-	public static void taskSaveProjectAs(String name, String title)
-	{
-		Log.f1("Saving project '" + Projects.getActive().getName() + "' as '" + name + "'");
+                        Log.f1("Loading project " + name);
+                        Alerts.loading(true);
+                        Projects.closeProject();
+                        Projects.openProject(name);
+                        Flags.PROJECT_CHANGED = true;
+                        Tasks.taskOnProjectChanged();
+                        Alerts.loading(false);
 
-		taskStoreProjectChanges(); // save current project to TMP
+                        // -- task end --
+                    }
+                }).start();
+            }
+        });
+    }
 
-		final Project newProject = new Project(name);
 
-		// copy old project TMP to new project TMP
-		final File currentDir = Projects.getActive().getProjectDirectory();
-		final File targetDir = newProject.getProjectDirectory();
+    public static void taskSaveProjectAs(String name, String title) {
+        Log.f1("Saving project '" + Projects.getActive().getName() + "' as '" + name + "'");
 
-		try {
-			FileUtils.copyDirectory(currentDir, targetDir, FileUtils.NoGitFilter, null);
-		} catch (final IOException e) {
-			Log.e("An error occured while\ncopying project files.");
-			FileUtils.delete(targetDir, true); // cleanup
-			return;
-		}
+        taskStoreProjectChanges(); // save current project to TMP
 
-		newProject.reload(); // load from new project TMP
-		newProject.setTitle(title); // set a new title
+        final Project newProject = new Project(name);
 
-		// mark new project as active
-		Projects.setActive(newProject);
+        // copy old project TMP to new project TMP
+        final File currentDir = Projects.getActive().getProjectDirectory();
+        final File targetDir = newProject.getProjectDirectory();
 
-		taskSaveProject();
+        try {
+            FileUtils.copyDirectory(currentDir, targetDir, FileUtils.NoGitFilter, null);
+        } catch (final IOException e) {
+            Log.e("An error occured while\ncopying project files.");
+            FileUtils.delete(targetDir, true); // cleanup
+            return;
+        }
 
-		taskOnProjectChanged();
-	}
+        newProject.reload(); // load from new project TMP
+        newProject.setTitle(title); // set a new title
 
+        // mark new project as active
+        Projects.setActive(newProject);
 
-	public static void taskDeleteResourcepack(String packname)
-	{
-		final File f = new File(OsUtils.getAppDir(Paths.DIR_RESOURCEPACKS), packname);
-		FileUtils.delete(f, true);
-	}
+        taskSaveProject();
 
+        taskOnProjectChanged();
+    }
 
-	public static void taskDialogProjectProperties()
-	{
-		Gui.open(new DialogProjectProperties());
-	}
 
+    public static void taskDeleteResourcepack(String packname) {
+        final File f = new File(OsUtils.getAppDir(Paths.DIR_RESOURCEPACKS), packname);
+        FileUtils.delete(f, true);
+    }
 
-	public static void taskDialogProjectSummary()
-	{
-		if (!Projects.isOpen()) {
-			Alerts.error(null, "No project is open!");
-		} else {
-			Gui.open(new DialogProjectSummary());
-		}
-	}
 
+    public static void taskDialogProjectProperties() {
+        Gui.open(new DialogProjectProperties());
+    }
 
-	public static void taskDialogManageLibrary()
-	{
-		Gui.open(new DialogManageLibrary());
-	}
 
+    public static void taskDialogProjectSummary() {
+        if (!Projects.isOpen()) {
+            Alerts.error(null, "No project is open!");
+        } else {
+            Gui.open(new DialogProjectSummary());
+        }
+    }
 
-	public static void taskDialogManageProjects()
-	{
-		Gui.open(new DialogManageProjects());
-	}
 
+    public static void taskDialogManageLibrary() {
+        Gui.open(new DialogManageLibrary());
+    }
 
-	public static void taskDialogNewProject()
-	{
-		Gui.open(new DialogNewProject());
-	}
 
+    public static void taskDialogManageProjects() {
+        Gui.open(new DialogManageProjects());
+    }
 
-	public static void taskDialogSaveAs()
-	{
-		Gui.open(new DialogSaveAs());
-	}
 
+    public static void taskDialogNewProject() {
+        Gui.open(new DialogNewProject());
+    }
 
-	public static void taskDialogSettings()
-	{
-		Gui.open(new DialogConfigureEditors());
-	}
 
+    public static void taskDialogSaveAs() {
+        Gui.open(new DialogSaveAs());
+    }
 
-	public static void taskRedrawRecentProjectsMenu()
-	{
-		App.getMenu().updateRecentProjects();
-	}
 
+    public static void taskDialogSettings() {
+        Gui.open(new DialogConfigureEditors());
+    }
 
-	public static void taskOnProjectPropertiesChanged()
-	{
-		taskUpdateTitlebar();
-		App.getSidePanel().updateProjectInfo();
-	}
 
+    public static void taskRedrawRecentProjectsMenu() {
+        App.getMenu().updateRecentProjects();
+    }
 
-	public static void taskUpdateTitlebar()
-	{
-		App.setTitle(App.getWindowTitle());
-	}
 
+    public static void taskOnProjectPropertiesChanged() {
+        taskUpdateTitlebar();
+        App.getSidePanel().updateProjectInfo();
+    }
 
-	public static void taskEditAsset(AssetTreeLeaf node)
-	{
-		TaskModifyAsset.edit(node, false);
-	}
 
+    public static void taskUpdateTitlebar() {
+        App.setTitle(App.getWindowTitle());
+    }
 
-	public static void taskEditMeta(AssetTreeLeaf node)
-	{
-		TaskModifyAsset.edit(node, true);
-	}
 
+    public static void taskEditAsset(AssetTreeLeaf node) {
+        TaskModifyAsset.edit(node, false);
+    }
 
-	public static void taskOpenInFileManager(AssetTreeLeaf node)
-	{
-		if (node == null) {
-			Log.e("Tried to open folder for null leaf.");
-			return;
-		}
-		if (!node.isAssetProvidedByProject()) {
-			Log.e("Tried to open node for leaf not in project");
-			return;
-		}
 
-		File f = Projects.getActive().getAssetFile(node.getAssetKey());
+    public static void taskEditModel(AssetTreeLeaf node) {
+        TaskModifyAsset.editModel(node);
+    }
 
-		File dir = f.getParentFile();
 
-		if (!DesktopApi.open(dir)) {
-			Alerts.error(App.getFrame(), "Failed to open folder, platform not\nsupported by the Java API. Sorry.");
-		}
-	}
+    public static void taskEditMeta(AssetTreeLeaf node) {
+        TaskModifyAsset.edit(node, true);
+    }
 
 
-	public static void taskDialogManageMcPacks()
-	{
-		Gui.open(new DialogManageMcPacks());
-	}
+    public static void taskOpenInFileManager(AssetTreeLeaf node) {
+        if (node == null) {
+            Log.e("Tried to open folder for null leaf.");
+            return;
+        }
+        if (!node.isAssetProvidedByProject()) {
+            Log.e("Tried to open node for leaf not in project");
+            return;
+        }
 
+        File f = Projects.getActive().getAssetFile(node.getAssetKey());
 
-	public static void taskOpenProjectFolder()
-	{
-		if (Projects.isOpen() && !DesktopApi.open(Projects.getActive().getProjectDirectory())) {
-			//@formatter:off
-			Alerts.error(
-					App.getFrame(),
-					"Could not open directory, platform\n" +
-					"not supported by the Java API.\n" +
-					"\n" +
-					"Check log file for details."
-			);
-			//@formatter:on
-		}
-	}
+        File dir = f.getParentFile();
 
+        if (!DesktopApi.open(dir)) {
+            Alerts.error(App.getFrame(), "Failed to open folder, platform not\nsupported by the Java API. Sorry.");
+        }
+    }
 
-	public static void checkUpdate()
-	{
-		TaskCheckUpdate.run();
-	}
 
+    public static void taskDialogManageMcPacks() {
+        Gui.open(new DialogManageMcPacks());
+    }
 
-	public static void taskLoadHelp()
-	{
-		(new Thread(new Runnable()
-		{
 
-			@Override
-			public void run()
-			{
-				HelpStore.load();
-			}
-		})).start();
-	}
+    public static void taskOpenProjectFolder() {
+        if (Projects.isOpen() && !DesktopApi.open(Projects.getActive().getProjectDirectory())) {
+            //@formatter:off
+            Alerts.error(
+                    App.getFrame(),
+                    "Could not open directory, platform\n" +
+                            "not supported by the Java API.\n" +
+                            "\n" +
+                            "Check log file for details."
+            );
+            //@formatter:on
+        }
+    }
 
 
-	public static void taskOpenSoundWizard()
-	{
-		if (!Projects.isOpen()) return;
+    public static void checkUpdate() {
+        TaskCheckUpdate.run();
+    }
 
-		Alerts.loading(true);
-		final DialogSoundWizard dlg = new DialogSoundWizard();
-		Alerts.loading(false);
-		dlg.setVisible(true);
-	}
 
+    public static void taskLoadHelp() {
+        (new Thread(new Runnable() {
 
-	public static void taskShowChangelog()
-	{
-		if (VersionUtils.shouldShowChangelog()) {
-			Gui.open(new DialogChangelog());
-		}
-	}
+            @Override
+            public void run() {
+                HelpStore.load();
+            }
+        })).start();
+    }
 
 
-	public static int taskPopulateProjectFromPack(final File pack, final Runnable after)
-	{
-		final int task = Tasks.startTask();
+    public static void taskOpenSoundWizard() {
+        if (!Projects.isOpen()) return;
 
-		new Thread(new Runnable()
-		{
+        Alerts.loading(true);
+        final DialogSoundWizard dlg = new DialogSoundWizard();
+        Alerts.loading(false);
+        dlg.setVisible(true);
+    }
 
-			@Override
-			public void run()
-			{
-				// -- task begin --
 
-				(new SequencePopulateProjectFromPack(pack, after)).run();
+    public static void taskManageLanguages() {
+        if (!Projects.isOpen()) return;
 
-				Tasks.stopTask(task);
+        Gui.open(new DialogManageLanguages());
+    }
 
-				// -- task end --
-			}
-		}).start();
 
-		return task;
-	}
+    public static void taskCreateLanguage() {
+        if (!Projects.isOpen()) return;
 
+        Gui.open(new DialogNewLanguage());
+    }
 
-	public static void taskDialogExportToStitch()
-	{
-		Gui.open(new com.pixbits.rpw.stitcher.DialogExportStitch());
-	}
 
+    public static void taskShowChangelog() {
+        if (VersionUtils.shouldShowChangelog()) {
+            Gui.open(new DialogChangelog());
+        }
+    }
 
-	public static void taskDialogImportFromStitch()
-	{
-		Gui.open(new com.pixbits.rpw.stitcher.DialogImportStitch());
-	}
+
+    public static void taskShowChangelogForced() {
+        Gui.open(new DialogChangelog());
+    }
+
+
+    public static int taskPopulateProjectFromPack(final File pack, final Runnable after) {
+        final int task = Tasks.startTask();
+
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                // -- task begin --
+
+                (new SequencePopulateProjectFromPack(pack, after)).run();
+
+                Tasks.stopTask(task);
+
+                // -- task end --
+            }
+        }).start();
+
+        return task;
+    }
+
+
+    public static void taskDialogExportToStitch() {
+        Gui.open(new com.pixbits.rpw.stitcher.DialogExportStitch());
+    }
+
+
+    public static void taskDialogImportFromStitch() {
+        Gui.open(new com.pixbits.rpw.stitcher.DialogImportStitch());
+    }
 }
